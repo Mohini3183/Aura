@@ -22,7 +22,10 @@ STRING   \"([^\\\"]|\\.)*\"
 
 ~\*([^*]|\*+[^*~])*\*~ {
     char *p = yytext;
-    while (*p) { if (*p=='\n') line_num++; p++; }
+    while (*p) {
+        if (*p == '\n') line_num++;
+        p++;
+    }
 }
 
 "var"         { return VAR; }

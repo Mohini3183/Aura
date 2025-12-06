@@ -9,9 +9,10 @@ extern FILE *yyin;
 
 void yyerror(const char *s);
 
+/* Symbol table */
 typedef struct {
     char *name;
-    char *type;
+    char *type;  // "number", "decimal", "text"
     union {
         int ival;
         float fval;
@@ -40,7 +41,7 @@ void set_symbol_value(char *name, int ival, float fval, char *sval);
 %token ASSIGN PLUS MINUS MULTIPLY DIVIDE
 %token LPAREN RPAREN SEMICOLON COMMA
 
-%type <ival> expression
+%type <fval> expression
 %type <fval> float_expression
 
 %left PLUS MINUS
@@ -73,9 +74,9 @@ declaration:
     | VAR TEXT IDENTIFIER
         { add_symbol($3,"text"); printf("Declared text variable: %s\n",$3); }
     | VAR NUMBER IDENTIFIER ASSIGN expression
-        { add_symbol($3,"number"); set_symbol_value($3,$5,0,NULL);
-          printf("Assigned %s = %d\n",$3,$5); }
-    | VAR DECIMAL IDENTIFIER ASSIGN float_expression
+        { add_symbol($3,"number"); set_symbol_value($3,(int)$5,0,NULL);
+          printf("Assigned %s = %d\n",$3,(int)$5); }
+    | VAR DECIMAL IDENTIFIER ASSIGN expression
         { add_symbol($3,"decimal"); set_symbol_value($3,0,$5,NULL);
           printf("Assigned %s = %.2f\n",$3,$5); }
     | VAR TEXT IDENTIFIER ASSIGN STRING_LITERAL
@@ -85,29 +86,37 @@ declaration:
 
 assignment:
       IDENTIFIER ASSIGN expression
-        { Symbol *s=lookup_symbol($1);
-          if(s){ set_symbol_value($1,$3,0,NULL); printf("Assigned %s = %d\n",$1,$3); }
-          else yyerror("Variable not declared"); }
-    | IDENTIFIER ASSIGN float_expression
-        { Symbol *s=lookup_symbol($1);
-          if(s){ set_symbol_value($1,0,$3,NULL); printf("Assigned %s = %.2f\n",$1,$3); }
-          else yyerror("Variable not declared"); }
+        {
+            Symbol *s = lookup_symbol($1);
+            if(!s) yyerror("Variable not declared");
+            else if(strcmp(s->type,"number")==0) {
+                set_symbol_value($1,(int)$3,0,NULL);
+                printf("Assigned %s = %d\n",$1,(int)$3);
+            } else if(strcmp(s->type,"decimal")==0) {
+                set_symbol_value($1,0,$3,NULL);
+                printf("Assigned %s = %.2f\n",$1,$3);
+            } else yyerror("Cannot assign numeric value to text variable");
+        }
     | IDENTIFIER ASSIGN STRING_LITERAL
-        { Symbol *s=lookup_symbol($1);
-          if(s){ set_symbol_value($1,0,0,$3); printf("Assigned %s = \"%s\"\n",$1,$3); }
-          else yyerror("Variable not declared"); }
+        {
+            Symbol *s = lookup_symbol($1);
+            if(!s) yyerror("Variable not declared");
+            else if(strcmp(s->type,"text")==0) {
+                set_symbol_value($1,0,0,$3);
+                printf("Assigned %s = \"%s\"\n",$1,$3);
+            } else yyerror("Cannot assign text to numeric variable");
+        }
     ;
 
 input_stmt:
     INPUT IDENTIFIER {
         Symbol *s = lookup_symbol($2);
-        if(s){
+        if(!s) yyerror("Variable not declared");
+        else {
             if(strcmp(s->type,"number")==0) scanf("%d",&s->value.ival);
             else if(strcmp(s->type,"decimal")==0) scanf("%f",&s->value.fval);
-            else if(strcmp(s->type,"text")==0){
-                char buf[256]; scanf("%s",buf); s->value.sval=strdup(buf);
-            }
-        } else yyerror("Variable not declared");
+            else if(strcmp(s->type,"text")==0) { char buf[256]; scanf("%s",buf); s->value.sval=strdup(buf); }
+        }
     }
     ;
 
@@ -122,8 +131,7 @@ output_list:
     ;
 
 output_item:
-      expression { printf("%d ", $1); }
-    | FLOAT_LITERAL { printf("%.2f ", $1); }
+      expression { printf("%.2f ", $1); }
     | STRING_LITERAL { printf("%s ", $1); }
     | IDENTIFIER {
         Symbol *s = lookup_symbol($1);
@@ -135,20 +143,20 @@ output_item:
     ;
 
 expression:
-      INT_LITERAL                 { $$ = $1; }
+      FLOAT_LITERAL         { $$ = $1; }
+    | INT_LITERAL           { $$ = (float)$1; }
     | IDENTIFIER
-        { Symbol *s=lookup_symbol($1); $$ = (s && strcmp(s->type,"number")==0) ? s->value.ival : 0; }
+        { Symbol *s = lookup_symbol($1);
+          if(!s) { yyerror("Variable not declared"); $$ = 0; }
+          else if(strcmp(s->type,"number")==0) $$ = (float)s->value.ival;
+          else if(strcmp(s->type,"decimal")==0) $$ = s->value.fval;
+          else yyerror("Cannot use text variable in numeric expression"); }
     | expression PLUS expression      { $$ = $1 + $3; }
     | expression MINUS expression     { $$ = $1 - $3; }
     | expression MULTIPLY expression  { $$ = $1 * $3; }
     | expression DIVIDE expression
-        { if($3==0){ yyerror("Division by zero"); $$=0;} else $$=$1/$3; }
-    | LPAREN expression RPAREN        { $$=$2; }
-    ;
-
-float_expression:
-      FLOAT_LITERAL  { $$ = $1; }
-    | INT_LITERAL    { $$ = (float)$1; }
+        { if($3==0) { yyerror("Division by zero"); $$=0; } else $$ = $1/$3; }
+    | LPAREN expression RPAREN        { $$ = $2; }
     ;
 
 %%
@@ -170,11 +178,10 @@ void add_symbol(char *name,char *type){
 
 void set_symbol_value(char *name,int ival,float fval,char *sval){
     Symbol *s=lookup_symbol(name);
-    if(s){
-        if(strcmp(s->type,"number")==0) s->value.ival=ival;
-        else if(strcmp(s->type,"decimal")==0) s->value.fval=fval;
-        else if(strcmp(s->type,"text")==0) s->value.sval=strdup(sval);
-    }
+    if(!s) return;
+    if(strcmp(s->type,"number")==0) s->value.ival = ival;
+    else if(strcmp(s->type,"decimal")==0) s->value.fval = fval;
+    else if(strcmp(s->type,"text")==0) s->value.sval = strdup(sval);
 }
 
 int main(int argc,char **argv){

@@ -1,0 +1,24 @@
+~# Combined Demo Program
+output "Welcome to Aura Demo!";
+
+var text name;
+input name;
+
+var number age;
+output "Enter your age:";
+input age;
+
+~# Increment age by 1;
+var number next_age = age + 1;
+
+output "Hello,", name;
+output "You are", age, "years old.";
+output "Next year, you will be", next_age;
+
+~* 
+This program demonstrates:
+- Variable declaration
+- Input/Output
+- Arithmetic
+- Comments
+*~

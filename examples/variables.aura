@@ -1,0 +1,13 @@
+~# Variable declaration and assignment
+var number age = 21;
+var decimal pi = 3.1416;
+var text name = "Alice";
+
+~# Assign new values
+age = age + 1;
+pi = pi * 2;
+name = "Bob";
+
+output "Age:", age;
+output "PI:", pi;
+output "Name:", name;

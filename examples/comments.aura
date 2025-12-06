@@ -1,0 +1,11 @@
+~# Single-line comment example
+var number x = 10;
+
+~*
+This is a multi-line comment
+It can span multiple lines
+Used for documentation
+*~
+
+var number y = 20;
+output "x + y =", x + y;

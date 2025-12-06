@@ -1,0 +1,11 @@
+var text username;
+var number user_age;
+
+output "Enter your name:";
+input username;
+
+output "Enter your age:";
+input user_age;
+
+output "Hello,", username;
+output "You are", user_age, "years old.";

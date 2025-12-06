@@ -1,0 +1,13 @@
+var number a = 5;
+var number b = 10;
+var decimal c = 2.5;
+
+var number sum = a + b;
+var number diff = b - a;
+var number prod = a * b;
+var decimal quotient = b / c;
+
+output "Sum:", sum;
+output "Difference:", diff;
+output "Product:", prod;
+output "Quotient:", quotient;

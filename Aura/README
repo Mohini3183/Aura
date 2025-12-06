@@ -1,0 +1,304 @@
+# Aura Programming Language Compiler — README
+
+## Welcome to Aura
+
+Aura is a lightweight, beginner-friendly programming language designed for educational purposes. It allows students to learn the core concepts of compiler design including lexical analysis, parsing, and basic semantic execution. This version of Aura focuses on:
+
+* **Variable Declaration** (`number`, `decimal`, `text`)
+* **Input and Output Operations** (`input` and `output`)
+* **Comments** (Single-line `~#` and multi-line `~* ... *~`)
+
+Aura programs are designed to be simple, readable, and ideal for learning how a compiler works under the hood.
+
+---
+
+## Table of Contents
+
+1. [Getting Started](#getting-started)
+2. [Basic Syntax](#basic-syntax)
+3. [Variables](#variables)
+4. [Input and Output](#input-and-output)
+5. [Comments](#comments)
+6. [Expressions](#expressions)
+7. [Example Program](#example-program)
+8. [Building the Compiler](#building-the-compiler)
+9. [Running Aura Programs](#running-aura-programs)
+10. [Sample Output](#sample-output)
+11. [Notes and Limitations](#notes-and-limitations)
+12. [License](#license)
+
+---
+
+## Getting Started
+
+Aura programs are written as plain text files with the `.aura` extension. To write and execute Aura programs:
+
+1. Write your code in a file named `example.aura`.
+2. Use the Aura compiler to build and run your program.
+3. Follow the syntax rules to avoid compilation errors.
+
+---
+
+## Basic Syntax
+
+* **Case-sensitive**: `Name` and `name` are treated as different variables.
+* **Whitespace**: Ignored except inside strings.
+* **Statement terminator**: Each statement ends with a newline or semicolon (`;`).
+* **Reserved Keywords**: Cannot be used as variable names.
+
+**Customized Reserved Keywords in Aura**:
+`var`, `number`, `decimal`, `text`, `input`, `output`
+
+**Comment Symbols**:
+
+* Single-line comment: starts with `~#`
+* Multi-line comment: starts with `~*` and ends with `*~`
+
+---
+
+## Variables
+
+Variables in Aura must be declared before use. Supported types:
+
+| Type    | Description            |
+| ------- | ---------------------- |
+| number  | Integer numbers        |
+| decimal | Floating-point numbers |
+| text    | Strings                |
+
+Variables can be declared and optionally initialized:
+
+```aura
+~# Declaration with initialization
+var number age = 21
+var decimal pi = 3.1416
+var text name = "Alice"
+
+~# Assigning values later
+age = age + 1
+name = name + " Johnson"
+```
+
+---
+
+## Input and Output
+
+### Input
+
+To read user input:
+
+```aura
+input variable_name
+```
+
+* The type of the input must match the declared variable type.
+
+Example:
+
+```aura
+var text username
+input username
+```
+
+### Output
+
+To display messages or variable values:
+
+```aura
+output expr1, expr2, ...
+```
+
+Example:
+
+```aura
+output "Hello,", username
+```
+
+You can output numbers, decimals, strings, or variables in a single statement.
+
+---
+
+## Comments
+
+* **Single-line comments**: Start with `~#`
+* **Multi-line comments**: Start with `~*` and end with `*~`
+
+Examples:
+
+```aura
+~# This is a single-line comment
+
+~*
+   This is a
+   multi-line comment
+*~
+```
+
+Comments are ignored by the compiler and are only for documentation.
+
+---
+
+## Expressions
+
+Aura supports basic arithmetic operations:
+
+| Operator | Description    |
+| -------- | -------------- |
+| +        | Addition       |
+| -        | Subtraction    |
+| *        | Multiplication |
+| /        | Division       |
+
+Example:
+
+```aura
+var number a = 5
+var decimal b = 2.0
+var number c = a + 10
+output a, b, c
+```
+
+---
+
+## Example Program
+
+```aura
+~# Welcome program
+output "Enter your name:"
+var text name
+input name
+
+output "Enter your age:"
+var number age
+input age
+
+~# Print greeting
+output "Hello,", name, "You are", age, "years old."
+
+~# Simple arithmetic
+var number next_age = age + 1
+output "Next year, you will be", next_age
+```
+
+---
+
+## Building the Compiler
+
+To build the Aura compiler, follow these steps:
+
+1. **Clean previous builds (optional)**:
+
+```bash
+make clean
+```
+
+This removes any previously compiled files, including `aura`, `lex.yy.c`, `aura_parser.tab.c`, and `aura_parser.tab.h`.
+
+2. **Run Bison**:
+
+```bash
+bison -d -o parser/aura_parser.tab.c parser/aura_parser.y
+```
+
+* Generates the parser source code (`aura_parser.tab.c`) and header file (`aura_parser.tab.h`)
+* Resolves grammar rules and prepares the parser for compilation
+
+3. **Run Flex**:
+
+```bash
+flex -o lexer/lex.yy.c lexer/aura_lexer.l
+```
+
+* Generates the lexer source code (`lex.yy.c`)
+* Handles tokenization of keywords, identifiers, literals, operators, and comments
+
+4. **Compile with GCC**:
+
+```bash
+gcc -Wall -g -o aura parser/aura_parser.tab.c lexer/lex.yy.c -lfl
+```
+
+* Links the lexer and parser into a single executable called `aura`
+* `-Wall` enables all warnings, `-g` allows debugging
+
+At the end of these steps, the executable `aura` is ready for use.
+
+---
+
+## Running Aura Programs
+
+1. Save your program in a `.aura` file, e.g., `test.aura`.
+2. Run the compiler:
+
+```bash
+./aura examples/test.aura
+```
+
+3. The compiler executes the program and prints the output and symbol table.
+
+---
+
+## Sample Output
+
+Given the sample program:
+
+```aura
+var number age = 21
+var decimal pi = 3.14
+var text name = "Alice"
+
+output "Name:"
+output name
+
+age = age + 1
+output "Next age:"
+output age
+
+input name
+output "Hello,", name
+```
+
+Sample console output:
+
+```
+=== Aura Language Compiler ===
+Starting compilation...
+
+Assigned age = 21
+Assigned pi = 3.14
+Assigned name = "Alice"
+Name:
+Alice
+Next age:
+22
+Hello, Alice
+
+=== Compilation Complete ===
+Symbol Table:
+  age (number)
+  pi (decimal)
+  name (text)
+```
+
+---
+
+## Notes and Limitations
+
+* The compiler currently **does not include separate semantic analysis modules**. All features are implemented via the lexer and parser.
+* Variables must be declared before use.
+* Input types must match variable types; otherwise, unexpected behavior may occur.
+* Statements may be terminated with either a newline or a semicolon.
+* Arithmetic division by zero is handled with a runtime error message.
+
+---
+
+## License
+
+This project is for **educational purposes only** and can be freely used or modified.
+
+---
+
+## Authors
+
+* Compiler implemented by: *Team Aura  /*
+
